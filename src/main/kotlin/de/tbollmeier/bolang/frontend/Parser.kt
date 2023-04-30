@@ -4,12 +4,19 @@ import de.tbollmeier.grammarous.Ast
 import de.tbollmeier.grammarous.Result
 import de.tbollmeier.grammarous.SyntaxParser
 import de.tbollmeier.grammarous.grammar
-
 import de.tbollmeier.bolang.frontend.LanguageElements as LE
 
 class Parser {
 
     private val grammar = grammar {
+
+        transform("ID") {
+            Identifier(it.value)
+        }
+
+        transform("NUMBER") {
+            Number(it.value)
+        }
 
         ruleDef("program") {
             many { rule("statement") }
@@ -32,6 +39,10 @@ class Parser {
             terminal(LE.RETURN.name)
             rule("expression")
             terminal(LE.SEMICOLON.name)
+        } transformBy lambda@{
+            val term = it.children[1]
+            term.id = ""
+            return@lambda Return(term)
         }
 
         ruleDef("ifStatement") {
@@ -71,6 +82,10 @@ class Parser {
             terminal(LE.LEFT_BRACE.name)
             many { rule("statement", "stmt") }
             terminal(LE.RIGHT_BRACE.name)
+        } transformBy lambda@{
+            val statements = it.getChildrenById("stmt")
+            statements.forEach { it.id = "" }
+            return@lambda Block(statements)
         }
 
         ruleDef("functionStatement") {
@@ -80,6 +95,20 @@ class Parser {
             rule("parameters", "parameters")
             terminal(LE.RIGHT_PAREN.name)
             rule("blockStatement", "body")
+        } transformBy lambda@{
+            val name = it.getChildrenById("name")[0].attrs["name"]!!
+
+            val params = mutableListOf<Identifier>()
+            val parameters = it.getChildrenById("parameters")[0]
+            for (parameter in parameters.getChildrenById("param")) {
+                parameter.id = ""
+                params.add((parameter as Identifier))
+            }
+
+            val body = it.getChildrenById("body")[0] as Block
+            body.id = ""
+
+            return@lambda Function(name, params, body)
         }
 
         ruleDef("parameters") {
