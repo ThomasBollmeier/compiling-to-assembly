@@ -32,6 +32,9 @@ class ParserTest {
                 }
                 return result;
             }
+            
+            show(factorial(10));
+            sayHello(firstName, lastName);
         """.trimIndent()
 
         parseOK(code)

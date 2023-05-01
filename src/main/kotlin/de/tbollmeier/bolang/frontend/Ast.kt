@@ -73,3 +73,45 @@ class Function(name: String, parameters: List<Identifier>, body: Block): Ast("Fu
         addChild(body)
     }
 }
+
+class If(conditional: Ast, consequence: Ast, alternative: Ast): Ast("If") {
+    init {
+        addChild(conditional)
+        addChild(consequence)
+        addChild(alternative)
+        children.forEach { it.id = "" }
+    }
+}
+
+class While(conditional: Ast, body: Ast): Ast("While") {
+    init {
+        addChild(conditional)
+        addChild(body)
+        children.forEach { it.id = "" }
+    }
+}
+
+class Var(name: String, value: Ast): Ast("Var") {
+    init {
+        attrs["name"] = name
+        value.id = ""
+        addChild(value)
+    }
+}
+class Assign(name: String, value: Ast): Ast("Assign") {
+    init {
+        attrs["name"] = name
+        value.id = ""
+        addChild(value)
+    }
+}
+
+class Call(callee: String, args: List<Ast>): Ast("Call") {
+    init {
+        attrs["callee"] = callee
+        for (arg in args) {
+            arg.id = ""
+            addChild(arg)
+        }
+    }
+}

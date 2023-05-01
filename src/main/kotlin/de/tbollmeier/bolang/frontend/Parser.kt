@@ -50,9 +50,14 @@ class Parser {
             terminal(LE.LEFT_PAREN.name)
             rule("expression", "conditional")
             terminal(LE.RIGHT_PAREN.name)
-            rule("statement", "consequent")
+            rule("statement", "consequence")
             terminal(LE.ELSE.name)
             rule("statement", "alternative")
+        } transformBy lambda@{
+            val conditional = it.getChildrenById("conditional")[0]
+            val consequence = it.getChildrenById("consequence")[0]
+            val alternative = it.getChildrenById("alternatice")[0]
+            return@lambda If(conditional, consequence, alternative)
         }
 
         ruleDef("whileStatement") {
@@ -61,6 +66,10 @@ class Parser {
             rule("expression", "conditional")
             terminal(LE.RIGHT_PAREN.name)
             rule("statement", "body")
+        } transformBy lambda@{
+            val conditional = it.getChildrenById("conditional")[0]
+            val body = it.getChildrenById("body")[0]
+            return@lambda While(conditional, body)
         }
 
         ruleDef("varStatement") {
@@ -69,6 +78,10 @@ class Parser {
             terminal(LE.ASSIGN.name)
             rule("expression", "value")
             terminal(LE.SEMICOLON.name)
+        } transformBy lambda@{
+            val name = it.getChildrenById("name")[0].attrs["name"]!!
+            val value = it.getChildrenById("value")[0]
+            return@lambda Var(name, value)
         }
 
         ruleDef("assignmentStatement") {
@@ -76,6 +89,10 @@ class Parser {
             terminal(LE.ASSIGN.name)
             rule("expression", "value")
             terminal(LE.SEMICOLON.name)
+        } transformBy lambda@{
+            val name = it.getChildrenById("name")[0].attrs["name"]!!
+            val value = it.getChildrenById("value")[0]
+            return@lambda Assign(name, value)
         }
 
         ruleDef("blockStatement") {
@@ -124,7 +141,7 @@ class Parser {
         ruleDef("expressionStatement") {
             rule("expression")
             terminal(LE.SEMICOLON.name)
-        }
+        } transformBy { it.children[0] }
 
         ruleDef("expression") {
             rule("comparison")
@@ -190,14 +207,19 @@ class Parser {
             terminal(LE.LEFT_PAREN.name)
             rule("args")
             terminal(LE.RIGHT_PAREN.name)
+        } transformBy lambda@{
+            val callee = it.children[0].attrs["name"]!!
+            val args = it.children[2].getChildrenById("arg")
+
+            return@lambda Call(callee, args)
         }
 
         ruleDef("args") {
             optional {
-                rule("expression")
+                rule("expression", "arg")
                 many {
                     terminal(LE.COMMA.name)
-                    rule("expression")
+                    rule("expression", "arg")
                 }
             }
         }

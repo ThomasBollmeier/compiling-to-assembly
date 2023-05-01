@@ -17,6 +17,10 @@ class ScannerTest {
                 }
                 return result;
             }
+            
+            show(factorial(10));
+            say_hello("Thomas", "Bollmeier")
+            
         """.trimIndent()
 
         printTokens(Scanner().scan(code))
